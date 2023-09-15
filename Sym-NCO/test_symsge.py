@@ -31,8 +31,8 @@ from TSPTester import TSPTester as Tester
 # parameters
 
 env_params = {
-    'problem_size': 50,
-    'pomo_size': 50,
+    'problem_size': 100,
+    'pomo_size': 100,
 }
 
 model_params = {
@@ -46,7 +46,7 @@ model_params = {
     'eval_type': 'argmax',
 
     # SGE
-    'sub_graph_emb': False,
+    'sub_graph_emb': True,
     'sub_graph_steps': 1,
 }
 
@@ -54,19 +54,19 @@ tester_params = {
     'use_cuda': USE_CUDA,
     'cuda_device_num': CUDA_DEVICE_NUM,
     'model_load': {
-        'path': 'pretrained_model/POMO/',  # directory path of pre-trained model and log files saved.
-        'epoch': 100,  # epoch version of pre-trained model to laod.
+        'path': 'pretrained_model/Sym-SGE/',  # directory path of pre-trained model and log files saved.
+        'epoch': 200,  # epoch version of pre-trained model to laod.
     },
     'test_data_load': {
         'enable': True,
-        'filename': 'data/tsp50_test_nodes.pkl'
+        'filename': 'data/tsp100_test_nodes.pkl'
     },
     'test_episodes': 10000,
     'test_batch_size': 10000,
     'augmentation_enable': True,
     'aug_factor': 1,
     'aug_batch_size': 3000,
-    'is_pomo':True
+    'is_pomo':False
 }
 if tester_params['augmentation_enable']:
     tester_params['test_batch_size'] = tester_params['aug_batch_size']

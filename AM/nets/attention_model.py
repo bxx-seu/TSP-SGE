@@ -357,11 +357,13 @@ class AttentionModel(nn.Module):
         # Compute query = context node embedding
         if state.get_current_node().size(-1) == 1 and self.SGE:  # num_step == 1
             if state.i.item() == 0:
-                self.sub_graph_emb_sum = embeddings.sum(1, keepdim=True)
+                self.sub_graph_emb_sum = fixed.node_embeddings.sum(1, keepdim=True)
                 self.current_step = 0
             else:
-                self.sub_graph_emb_sum = self.sub_graph_emb_sum - embeddings.gather(1,current_node[:, :, None].expand(batch_size, 1,
-                                                                embeddings.size(-1))).view(batch_size, 1, -1)
+                current_node = state.get_current_node()
+                batch_size, num_steps = current_node.size()
+                self.sub_graph_emb_sum = self.sub_graph_emb_sum - fixed.node_embeddings.gather(1,current_node[:, :, None].expand(batch_size, 1,
+                                                                fixed.node_embeddings.size(-1))).view(batch_size, 1, -1)
                 self.current_step += 1
             query = self.W_subg_mean(self.sub_graph_emb_sum/(fixed.node_embeddings.shape[1] - self.current_step)) + \
                     self.project_step_context(self._get_parallel_step_context(fixed.node_embeddings, state))

@@ -12,7 +12,7 @@ from utils.log_utils import log_values
 from utils import move_to
 import wandb
 
-wandb.init(project="AM")
+# wandb.init(project="AM")
 
 
 def get_inner_model(model):
@@ -104,7 +104,7 @@ def train_epoch(model, optimizer, baseline, lr_scheduler, epoch, val_dataset, pr
     print("Finished epoch {}, took {} s".format(epoch, time.strftime('%H:%M:%S', time.gmtime(epoch_duration))))
 
     avg_reward = validate(model, val_dataset, opts)
-    wandb.log({"avg_cost": avg_reward})
+    # wandb.log({"avg_cost": avg_reward})
 
     if not opts.no_tensorboard:
         tb_logger.log_value('val_avg_reward', avg_reward, step)

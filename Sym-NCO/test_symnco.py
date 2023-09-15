@@ -3,7 +3,7 @@
 
 DEBUG_MODE = False
 USE_CUDA = True
-CUDA_DEVICE_NUM = 3
+CUDA_DEVICE_NUM = 0
 
 
 ##########################################################################################
@@ -12,7 +12,7 @@ CUDA_DEVICE_NUM = 3
 import os
 import sys
 import numpy as np
-import pandas as pd
+# import pandas as pd
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, "../..")  # for problem_def
 sys.path.insert(0, "../../..")  # for utils
@@ -44,6 +44,10 @@ model_params = {
     'logit_clipping': 10,
     'ff_hidden_dim': 512,
     'eval_type': 'argmax',
+
+    # SGE
+    'sub_graph_emb': False,
+    'sub_graph_steps': 1,
 }
 
 tester_params = {
@@ -51,17 +55,17 @@ tester_params = {
     'cuda_device_num': CUDA_DEVICE_NUM,
     'model_load': {
         'path': 'pretrained_model/Sym-NCO/',  # directory path of pre-trained model and log files saved.
-        'epoch': 2010,  # epoch version of pre-trained model to laod.
+        'epoch': 200,  # epoch version of pre-trained model to laod.
     },
     'test_data_load': {
         'enable': True,
-        'filename': 'data/tsp100_test_seed1234.pkl'
+        'filename': 'data/tsp100_test_nodes.pkl'
     },
     'test_episodes': 10000,
     'test_batch_size': 10000,
     'augmentation_enable': True,
     'aug_factor': 1,
-    'aug_batch_size': 10000,
+    'aug_batch_size': 3000,
     'is_pomo':False
 }
 if tester_params['augmentation_enable']:
@@ -69,7 +73,7 @@ if tester_params['augmentation_enable']:
 
 logger_params = {
     'log_file': {
-        'desc': 'test__tsp_n20',
+        'desc': 'test__tsp_n100',
         'filename': 'run_log'
     }
 }
