@@ -1,0 +1,11 @@
+data/
+outputs/
+logs/
+results/
+__pycache__/
+pretrained/
+.idea
+*.tc.*
+*.tc_backward.*
+*.log
+*.bak

@@ -223,10 +223,21 @@ class TSP_Decoder(nn.Module):
         self.q_first = None  # saved q1, for multi-head attention
         self.q_mean = None  # saved q_mean, for problem adaptation
 
+        # SGE
+        self.encoded_nodes = None
+        self.graph_emb = None
+        self.sub_graph_emb_sum = None
+        self.sub_graph_emb = None
+        self.sub_graph_step_keep = 0
+
+        if self.model_params['sub_graph_emb']:
+            self.W_subg_mean = nn.Linear(embedding_dim, head_num * qkv_dim, bias=False)
+
     def set_kv(self, encoded_nodes):
         # encoded_nodes.shape: (batch, problem, embedding)
         head_num = self.model_params['head_num']
 
+        self.encoded_nodes = encoded_nodes
         self.k = reshape_by_heads(self.Wk(encoded_nodes), head_num=head_num)
         self.v = reshape_by_heads(self.Wv(encoded_nodes), head_num=head_num)
         # shape: (batch, head_num, pomo, qkv_dim)
@@ -253,6 +264,8 @@ class TSP_Decoder(nn.Module):
 
         self.q_mean = reshape_by_heads(x, head_num=head_num)
 
+        self.sub_graph_step_keep = 0  # SGE visited node count
+
     def forward(self, encoded_last_node, ninf_mask):
         # encoded_last_node.shape: (batch, pomo, embedding)
         # ninf_mask.shape: (batch, pomo, problem)
@@ -263,8 +276,10 @@ class TSP_Decoder(nn.Module):
         #######################################################
         q_last = reshape_by_heads(self.Wq_last(encoded_last_node), head_num=head_num)
         # shape: (batch, head_num, pomo, qkv_dim)
-
-        q = self.q_first + q_last
+        if self.model_params['sub_graph_emb']:
+            q = self.q_first + q_last + self.get_sub_graph_emb(encoded_last_node)
+        else:
+            q = self.q_first + q_last
         # shape: (batch, head_num, pomo, qkv_dim)
 
         out_concat = multi_head_attention(q, self.k, self.v, rank3_ninf_mask=ninf_mask)
@@ -292,6 +307,23 @@ class TSP_Decoder(nn.Module):
         # shape: (batch, pomo, problem)
 
         return probs
+
+    def get_sub_graph_emb(self, encoded_last_node=None):
+        # ninf_mask.shape: (batch, pomo, problem)
+        if self.sub_graph_step_keep == 0:
+            pomo_size = encoded_last_node.shape[-2]
+            self.sub_graph_emb_sum = self.encoded_nodes.sum(1)[:, None, :].repeat(1, pomo_size,1)
+            # (batch_size, pomo_size, embedding_size)
+
+        assert encoded_last_node is not None
+        self.sub_graph_emb_sum = self.sub_graph_emb_sum - encoded_last_node
+        self.sub_graph_step_keep += 1
+        if self.sub_graph_step_keep%self.model_params['sub_graph_steps'] == 0:
+            sub_graph_emb_ = self.sub_graph_emb_sum/(self.encoded_nodes.shape[1]-self.sub_graph_step_keep)  # problem_size - pre_steps - cur_step
+            sub_graph_emb = self.W_subg_mean(sub_graph_emb_)
+            self.sub_graph_emb = reshape_by_heads(sub_graph_emb, head_num=self.model_params['head_num'])
+        # (batch_size,head_num, pomo_size,key_dim)
+        return self.sub_graph_emb
 
 
 ########################################

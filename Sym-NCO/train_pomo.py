@@ -3,7 +3,7 @@
 
 DEBUG_MODE = False
 USE_CUDA = not DEBUG_MODE
-CUDA_DEVICE_NUM = 0
+CUDA_DEVICE_NUM = 3
 
 ##########################################################################################
 # Path Config
@@ -51,7 +51,7 @@ model_params = {
     'eval_type': 'argmax',
 
     # SGE
-    'sub_graph_emb': False,
+    'sub_graph_emb': True,
     'sub_graph_steps': 1
 }
 
